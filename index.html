@@ -955,6 +955,9 @@
     // ================= Wizard multi-etapas =================
     (function(){
       const WHATSAPP_NUMBER = "5521971163442";
+      // Cole aqui a URL do seu Google Apps Script (veja instruções enviadas separadamente).
+      // Enquanto estiver vazia, o site funciona normalmente — só não salva na planilha.
+      const SHEET_WEBHOOK_URL = "";
       const EVENT_TYPES = ["Aniversário infantil","1º aninho","Pacote Família (seg a sex)","Chá de bebê / revelação","Confraternização em família","Outra comemoração"];
       const GUEST_COUNTS = ["Até 60","61 a 100","101 a 150","151 a 200","201 a 250","Mais de 250"];
       const PRIORITIES = ["Diversão para as crianças","Buffet incrível","Espaço e estrutura","Conforto para os adultos","Tudo isso!"];
@@ -1125,8 +1128,30 @@
         });
       }
 
+      function sendToSheet(dateStr){
+        if(!SHEET_WEBHOOK_URL) return;
+        const payload = {
+          dataHora: new Date().toISOString(),
+          nome: state.name,
+          telefone: state.phone,
+          tipoComemoracao: state.eventType,
+          idade: state.age || 'não informado',
+          convidados: state.guestCount,
+          prioridade: state.priority,
+          dataDesejada: dateStr,
+          origem: 'Site — wizard'
+        };
+        fetch(SHEET_WEBHOOK_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify(payload)
+        }).catch(()=>{ /* nunca bloqueia a experiência do cliente */ });
+      }
+
       function renderSuccess(){
         const dateStr = state.date || "A definir";
+        sendToSheet(dateStr);
         content.innerHTML = `
           <div class="wizard-success">
             <div class="wizard-success-icon">✓</div>
