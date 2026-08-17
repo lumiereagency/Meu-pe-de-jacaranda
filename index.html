@@ -967,9 +967,14 @@
       // Enquanto estiver vazia, o site funciona normalmente — só não salva na planilha.
       const SHEET_WEBHOOK_URL = "";
       const EVENT_TYPES = ["Aniversário infantil","1º aninho","Pacote Família (seg a sex)","Chá de bebê / revelação","Confraternização em família","Outra comemoração"];
-      const GUEST_COUNTS = ["Até 60","61 a 100","101 a 150","151 a 200","201 a 250","Mais de 250"];
+      const GUEST_COUNTS_STANDARD = ["Até 60","61 a 100","101 a 150","151 a 200","201 a 250","Mais de 250"];
+      const GUEST_COUNTS_FAMILIA = ["Até 40 pessoas","41 a 50 pessoas","51 a 60 pessoas","Mais de 60 pessoas"];
       const PRIORITIES = ["Diversão para as crianças","Buffet incrível","Espaço e estrutura","Conforto para os adultos","Tudo isso!"];
-      const TOTAL_STEPS = 6;
+      const KNOWS_US = ["Já conheço, já fiz festa aqui","Já vi pelas redes sociais","Não conheço, é a primeira vez"];
+      const TOTAL_STEPS = 7;
+
+      // Tipos de comemoração que giram em torno de uma criança fazendo aniversário
+      const BIRTHDAY_TYPES = ["Aniversário infantil","Pacote Família (seg a sex)"];
 
       const state = {
         step: 1,
@@ -977,6 +982,7 @@
         age: "",
         guestCount: "",
         priority: "",
+        knowsUs: "",
         date: "",
         name: "",
         phone: ""
@@ -1029,10 +1035,23 @@
       }
 
       function renderStep2(){
+        // "1º aninho" já revela a idade, não faz sentido perguntar de novo.
+        if(state.eventType === "1º aninho"){
+          state.age = "1 ano";
+          goTo(state.step + 1);
+          return;
+        }
+        // Chá de bebê, confraternização e outras comemorações não giram em torno
+        // da idade de uma criança específica, então pulamos a pergunta.
+        if(!BIRTHDAY_TYPES.includes(state.eventType)){
+          state.age = "Não se aplica";
+          goTo(state.step + 1);
+          return;
+        }
         content.innerHTML = `
           <div class="wizard-question">Quantos aninhos a criança vai fazer?</div>
           <input type="number" min="0" max="120" class="wizard-date-input" id="ageInput" placeholder="Ex: 5" />
-          <button type="button" class="wizard-skip-link" id="skipAge">Não se aplica / prefiro não dizer</button>
+          <button type="button" class="wizard-skip-link" id="skipAge">Prefiro não dizer</button>
         `;
         const ageInput = document.getElementById('ageInput');
         ageInput.addEventListener('keypress', (e)=>{
@@ -1048,19 +1067,28 @@
       }
 
       function renderStep3(){
+        const isFamilia = state.eventType === "Pacote Família (seg a sex)";
+        const options = isFamilia ? GUEST_COUNTS_FAMILIA : GUEST_COUNTS_STANDARD;
+        const question = isFamilia
+          ? "O Pacote Família tem pacotes fechados de 40, 50 ou 60 pessoas. Quantas pessoas, no total?"
+          : "Aproximadamente quantos convidados?";
+        const overflowLabel = isFamilia ? "Mais de 60 pessoas" : "Mais de 250";
+        const warningText = isFamilia
+          ? "O Pacote Família aceita até 10 convidados extras além do pacote de 60. Pra grupos maiores, vamos te ajudar a encontrar o melhor formato!"
+          : "Nosso salão acomoda com todo conforto até 250 convidados. Conte pra gente o tamanho da sua festa que ajudamos a pensar no melhor formato!";
         content.innerHTML = `
-          <div class="wizard-question">Aproximadamente quantos convidados?</div>
+          <div class="wizard-question">${question}</div>
           <div class="wizard-options cols-2" id="opts3">
-            ${GUEST_COUNTS.map(v=>`<button type="button" class="wizard-opt-btn stacked" data-v="${esc(v)}">${esc(v)}</button>`).join('')}
+            ${options.map(v=>`<button type="button" class="wizard-opt-btn stacked" data-v="${esc(v)}">${esc(v)}</button>`).join('')}
           </div>
-          <p class="wizard-warning" id="guestWarning" style="display:none;">Nosso salão acomoda com todo conforto até 250 convidados. Conte pra gente o tamanho da sua festa que ajudamos a pensar no melhor formato!</p>
+          <p class="wizard-warning" id="guestWarning" style="display:none;">${warningText}</p>
         `;
         content.querySelectorAll('#opts3 button').forEach(btn=>{
           btn.addEventListener('click', ()=>{
             state.guestCount = btn.dataset.v;
             content.querySelectorAll('#opts3 button').forEach(b=>b.classList.remove('selected'));
             btn.classList.add('selected');
-            if(btn.dataset.v === "Mais de 250"){
+            if(btn.dataset.v === overflowLabel){
               document.getElementById('guestWarning').style.display = 'block';
               advance(2200);
             } else {
@@ -1088,6 +1116,22 @@
 
       function renderStep5(){
         content.innerHTML = `
+          <div class="wizard-question">Você já conhece o Meu Pé de Jacarandá?</div>
+          <div class="wizard-options cols-1" id="opts5">
+            ${KNOWS_US.map(v=>`<button type="button" class="wizard-opt-btn stacked" data-v="${esc(v)}">${esc(v)}</button>`).join('')}
+          </div>
+        `;
+        content.querySelectorAll('#opts5 button').forEach(btn=>{
+          btn.addEventListener('click', ()=>{
+            state.knowsUs = btn.dataset.v;
+            btn.classList.add('selected');
+            advance(300);
+          });
+        });
+      }
+
+      function renderStep6(){
+        content.innerHTML = `
           <div class="wizard-question">Já tem uma data em mente?</div>
           <input type="date" class="wizard-date-input" id="dateInput" min="${new Date().toISOString().split('T')[0]}" />
           <button type="button" class="wizard-skip-link" id="skipDate">Ainda não tenho data definida</button>
@@ -1106,7 +1150,7 @@
         });
       }
 
-      function renderStep6(){
+      function renderStep7(){
         content.innerHTML = `
           <div class="wizard-question">Por fim, como podemos te chamar?</div>
           <form id="leadForm">
@@ -1146,8 +1190,9 @@
           idade: state.age || 'não informado',
           convidados: state.guestCount,
           prioridade: state.priority,
+          conheceEspaco: state.knowsUs,
           dataDesejada: dateStr,
-          origem: 'Site — wizard'
+          origem: 'Site - wizard'
         };
         fetch(SHEET_WEBHOOK_URL, {
           method: 'POST',
@@ -1159,6 +1204,7 @@
 
       function renderSuccess(){
         const dateStr = state.date || "A definir";
+        const hasAge = state.age && state.age !== "Não se aplica";
         sendToSheet(dateStr);
         content.innerHTML = `
           <div class="wizard-success">
@@ -1167,22 +1213,24 @@
             <p class="sub">Já organizamos tudo. É só confirmar no WhatsApp que nossa equipe continua o papo.</p>
             <div class="wizard-summary">
               <div><span class="k">Comemoração</span><span class="v">${esc(state.eventType)}</span></div>
-              <div><span class="k">Idade</span><span class="v">${esc(state.age || '—')}</span></div>
+              ${hasAge ? `<div><span class="k">Idade</span><span class="v">${esc(state.age)}</span></div>` : ''}
               <div><span class="k">Convidados</span><span class="v">${esc(state.guestCount)}</span></div>
               <div><span class="k">Prioridade</span><span class="v">${esc(state.priority)}</span></div>
+              <div><span class="k">Já conhece</span><span class="v">${esc(state.knowsUs)}</span></div>
               <div><span class="k">Data</span><span class="v">${esc(dateStr)}</span></div>
             </div>
             <button type="button" class="wizard-whatsapp-btn" id="confirmBtn">💬 Falar com a equipe no WhatsApp</button>
           </div>
         `;
         document.getElementById('confirmBtn').addEventListener('click', ()=>{
+          const ageLine = hasAge ? `\n*Idade da criança:* ${state.age}` : '';
           const message = `Olá! Vim pelo site do Meu Pé de Jacarandá e gostaria de planejar uma festa. 🎉
 
 *Nome:* ${state.name}
-*Tipo de comemoração:* ${state.eventType}
-*Idade da criança:* ${state.age || 'não informado'}
+*Tipo de comemoração:* ${state.eventType}${ageLine}
 *Convidados (aprox.):* ${state.guestCount}
 *Prioridade:* ${state.priority}
+*Já conhece o espaço:* ${state.knowsUs}
 *Data desejada:* ${dateStr}
 
 Podem me ajudar com mais informações?`;
@@ -1199,6 +1247,7 @@ Podem me ajudar com mais informações?`;
           case 4: renderStep4(); break;
           case 5: renderStep5(); break;
           case 6: renderStep6(); break;
+          case 7: renderStep7(); break;
           default: renderSuccess(); break;
         }
       }
