@@ -1,0 +1,13 @@
+{
+  "name": "Meu Pé de Jacarandá",
+  "short_name": "Pé de Jacarandá",
+  "description": "Casa de festas infantis em Jacarepaguá, RJ, com piscina, playground, brinquedão climatizado e buffet completo em meio à natureza.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#5b3a8e",
+  "icons": [
+    { "src": "assets/favicon/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/favicon/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
