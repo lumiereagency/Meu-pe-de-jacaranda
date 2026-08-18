@@ -81,7 +81,7 @@
     {
       "@type": "Question",
       "name": "Quantos convidados a festa comporta?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Depende do salão e do pacote escolhido: recebemos desde grupos pequenos até festas com mais de 250 convidados no salão principal, e o Pacote Família recebe pacotes fechados de 40, 50 ou 60 pessoas. No formulário deste site você escolhe a faixa de convidados e já recebe uma proposta sob medida." }
+      "acceptedAnswer": { "@type": "Answer", "text": "No salão principal (fim de semana), o mínimo é 80 convidados, com capacidade para festas de mais de 250 pessoas. Já o Pacote Família (segunda a sexta) tem pacotes fechados de 40, 50 ou 60 pessoas. No formulário deste site você escolhe a faixa de convidados e já recebe uma proposta sob medida." }
     },
     {
       "@type": "Question",
@@ -943,7 +943,7 @@
         <div class="faq-list">
           <details class="faq-item">
             <summary>Quantos convidados a festa comporta?</summary>
-            <p>Depende do salão e do pacote escolhido: recebemos desde grupos pequenos até festas com mais de 250 convidados no salão principal, e o Pacote Família recebe pacotes fechados de 40, 50 ou 60 pessoas. No formulário deste site você escolhe a faixa de convidados e já recebe uma proposta sob medida.</p>
+            <p>No salão principal (fim de semana), o mínimo é 80 convidados, com capacidade para festas de mais de 250 pessoas. Já o Pacote Família (segunda a sexta) tem pacotes fechados de 40, 50 ou 60 pessoas. No formulário deste site você escolhe a faixa de convidados e já recebe uma proposta sob medida.</p>
           </details>
           <details class="faq-item">
             <summary>O que já vem incluso no pacote da festa?</summary>
@@ -1144,7 +1144,7 @@
       // Enquanto estiver vazia, o site funciona normalmente — só não salva na planilha.
       const SHEET_WEBHOOK_URL = "";
       const EVENT_TYPES = ["Aniversário infantil","1º aninho","Pacote Família (seg a sex)","Chá de bebê / revelação","Confraternização em família","Outra comemoração"];
-      const GUEST_COUNTS_STANDARD = ["Até 60","61 a 100","101 a 150","151 a 200","201 a 250","Mais de 250"];
+      const GUEST_COUNTS_STANDARD = ["80 a 100","101 a 150","151 a 200","201 a 250","Mais de 250"];
       const GUEST_COUNTS_FAMILIA = ["Até 40 pessoas","41 a 50 pessoas","51 a 60 pessoas","Mais de 60 pessoas"];
       const PRIORITIES = ["Diversão para as crianças","Buffet incrível","Espaço e estrutura","Conforto para os adultos","Tudo isso!"];
       const KNOWS_US = ["Já conheço, já fiz festa aqui","Já vi pelas redes sociais","Não conheço, é a primeira vez"];
@@ -1248,7 +1248,7 @@
         const options = isFamilia ? GUEST_COUNTS_FAMILIA : GUEST_COUNTS_STANDARD;
         const question = isFamilia
           ? "O Pacote Família tem pacotes fechados de 40, 50 ou 60 pessoas. Quantas pessoas, no total?"
-          : "Aproximadamente quantos convidados?";
+          : "Aproximadamente quantos convidados? (mínimo de 80 pessoas)";
         const overflowLabel = isFamilia ? "Mais de 60 pessoas" : "Mais de 250";
         const warningText = isFamilia
           ? "O Pacote Família aceita até 10 convidados extras além do pacote de 60. Pra grupos maiores, vamos te ajudar a encontrar o melhor formato!"
