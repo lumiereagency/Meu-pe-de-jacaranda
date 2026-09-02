@@ -236,11 +236,11 @@
       background:linear-gradient(155deg, #2a1d4d 0%, #4d3579 30%, #7c58ab 60%, #b391d1 100%);
     }
     .desktop-bg-photos{position:absolute; inset:-2% -2%; opacity:.4; filter:saturate(0.85);}
-    .desktop-bg-row{display:flex; gap:1.4rem; width:max-content; position:absolute; left:0; will-change:transform;}
-    .desktop-bg-row img{width:360px; height:250px; object-fit:cover; border-radius:1.2rem; flex:0 0 auto; filter:blur(1px);}
-    .desktop-bg-row.r1{top:4%; animation:bgScrollLeft 46s linear infinite;}
-    .desktop-bg-row.r2{top:40%; animation:bgScrollRight 38s linear infinite;}
-    .desktop-bg-row.r3{top:76%; animation:bgScrollLeft 52s linear infinite;}
+    .desktop-bg-row{display:flex; gap:1rem; width:max-content; position:absolute; left:0; will-change:transform;}
+    .desktop-bg-row img{width:clamp(320px, 44vh, 480px); height:clamp(220px, 30vh, 330px); object-fit:cover; border-radius:1.2rem; flex:0 0 auto; filter:blur(1px);}
+    .desktop-bg-row.r1{top:0%; animation:bgScrollLeft 46s linear infinite;}
+    .desktop-bg-row.r2{top:33%; animation:bgScrollRight 38s linear infinite;}
+    .desktop-bg-row.r3{top:66%; animation:bgScrollLeft 52s linear infinite;}
     @keyframes bgScrollLeft{from{transform:translateX(0);} to{transform:translateX(-50%);}}
     @keyframes bgScrollRight{from{transform:translateX(-50%);} to{transform:translateX(0);}}
     .desktop-bg-scrim{position:absolute; inset:0; background:linear-gradient(155deg, rgba(42,29,77,.6) 0%, rgba(77,53,121,.4) 35%, rgba(124,88,171,.45) 65%, rgba(179,145,209,.55) 100%);}
