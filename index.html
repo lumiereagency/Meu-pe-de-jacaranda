@@ -1173,7 +1173,7 @@
       const SHEET_WEBHOOK_URL = "";
       // Fila de vendedoras: cada lead é atribuído em rodízio, na ordem abaixo.
       // Pra adicionar/remover/reordenar vendedoras, só editar esta lista.
-      const VENDEDORAS = ["Jaqueline", "Bianca", "Rayane"];
+      const VENDEDORAS = ["Jaqueline", "Bianca"];
       const LEAD_QUEUE_URL = "https://api.countapi.xyz/hit/meupedejacarandarj/fila-vendedoras";
       const EVENT_TYPES = ["Aniversário infantil","1º aninho","Pacote Família (seg a sex)","Chá de bebê / revelação","Confraternização em família","Outra comemoração"];
       const GUEST_COUNTS_STANDARD = ["80 a 100","101 a 150","151 a 200","201 a 250","Mais de 250"];
@@ -1495,6 +1495,12 @@
         const dateStr = state.date || "A definir";
         const hasAge = state.age && state.age !== "Não se aplica";
         sendToSheet(dateStr);
+        // Já dispara a busca da vendedora da vez em segundo plano, assim que a tela
+        // de resumo aparece — na hora do clique no botão ela já estará pronta,
+        // e não precisamos abrir a aba do WhatsApp em branco pra esperar depois
+        // (isso se mostrou pouco confiável abrindo o app do WhatsApp no celular).
+        let vendedoraResolvida = null;
+        getVendedoraDaVez().then(v => { vendedoraResolvida = v; });
         content.innerHTML = `
           <div class="wizard-success">
             <div class="wizard-success-icon">✓</div>
@@ -1511,11 +1517,8 @@
             <button type="button" class="wizard-whatsapp-btn" id="confirmBtn">💬 Falar com a equipe no WhatsApp</button>
           </div>
         `;
-        document.getElementById('confirmBtn').addEventListener('click', async ()=>{
-          // Abre a aba já na hora do clique (preserva a permissão do navegador),
-          // e só troca a URL dela depois que a vendedora da vez for resolvida.
-          const win = window.open('', '_blank');
-          const vendedora = await getVendedoraDaVez();
+        document.getElementById('confirmBtn').addEventListener('click', ()=>{
+          const vendedora = vendedoraResolvida || VENDEDORAS[Math.floor(Math.random() * VENDEDORAS.length)];
           const ageLine = hasAge ? `\n*Idade da criança:* ${state.age}` : '';
           const message = `Olá ${vendedora}! Vim pelo site do Meu Pé de Jacarandá e gostaria de planejar uma festa. 🎉
 
@@ -1528,7 +1531,7 @@
 
 Podem me ajudar com mais informações?`;
           const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-          if(win){ win.location.href = url; } else { window.location.href = url; }
+          window.open(url, '_blank');
         });
       }
 
