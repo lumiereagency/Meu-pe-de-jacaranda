@@ -1186,6 +1186,17 @@
         return d.innerHTML;
       }
 
+      function todayLocalISO(){
+        // new Date().toISOString() converte pra UTC, o que "pula" pro dia seguinte
+        // à noite no horário do Brasil (GMT-3) e bloqueia o próprio dia no calendário.
+        // Aqui usamos os métodos locais (getFullYear/getMonth/getDate) pra evitar isso.
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      }
+
       function goTo(step){
         state.step = step;
         render();
@@ -1321,7 +1332,7 @@
       function renderStep6(){
         content.innerHTML = `
           <div class="wizard-question">Já tem uma data em mente?</div>
-          <input type="date" class="wizard-date-input" id="dateInput" min="${new Date().toISOString().split('T')[0]}" />
+          <input type="date" class="wizard-date-input" id="dateInput" min="${todayLocalISO()}" />
           <button type="button" class="wizard-skip-link" id="skipDate">Ainda não tenho data definida</button>
         `;
         const dateInput = document.getElementById('dateInput');
