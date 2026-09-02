@@ -545,6 +545,27 @@
     border-radius:.9rem; border:1px solid var(--border); background:var(--card); font-size:1.02rem;
     font-family:'Plus Jakarta Sans',sans-serif; color:var(--foreground); padding:0 1rem;
   }
+  .wcal{max-width:340px; margin:0 auto;}
+  .wcal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;}
+  .wcal-title{font-weight:700; font-size:.98rem; text-transform:capitalize;}
+  .wcal-nav{
+    width:34px; height:34px; border-radius:50%; border:1px solid var(--border); background:var(--card);
+    font-size:1.1rem; line-height:1; cursor:pointer; color:var(--foreground); transition:all .2s;
+  }
+  .wcal-nav:hover:not(:disabled){border-color:var(--primary); color:var(--primary);}
+  .wcal-nav:disabled{opacity:.3; cursor:default;}
+  .wcal-weekdays{display:grid; grid-template-columns:repeat(7,1fr); gap:.3rem; margin-bottom:.4rem;}
+  .wcal-weekdays span{text-align:center; font-size:.72rem; font-weight:700; color:var(--muted-foreground); text-transform:uppercase;}
+  .wcal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:.3rem;}
+  .wcal-cell{
+    aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:.6rem;
+    font-size:.86rem; font-family:'Plus Jakarta Sans',sans-serif; border:2px solid transparent; background:var(--card);
+    color:var(--foreground); cursor:pointer; transition:all .2s; font-weight:600;
+  }
+  .wcal-cell:hover:not(.selected){border-color:rgba(107,63,160,.3);}
+  .wcal-cell.selected{background:var(--primary); border-color:var(--primary); color:#fff; transform:scale(1.05);}
+  .wcal-cell.empty{visibility:hidden; cursor:default;}
+  .wcal-cell.disabled{color:var(--muted-foreground); opacity:.3; cursor:default; background:transparent; font-weight:500;}
   .wizard-success-icon{
     width:76px; height:76px; border-radius:50%; background:#dcfce7; color:#16a34a;
     display:flex; align-items:center; justify-content:center; margin:0 auto 1.4rem; font-size:2.1rem;
@@ -1172,6 +1193,7 @@
         priority: "",
         knowsUs: "",
         date: "",
+        dateISO: "",
         name: "",
         phone: ""
       };
@@ -1329,24 +1351,76 @@
         });
       }
 
+      const WCAL_MONTHS = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+      const WCAL_WEEKDAYS = ["D","S","T","Q","Q","S","S"];
+
       function renderStep6(){
-        content.innerHTML = `
-          <div class="wizard-question">Já tem uma data em mente?</div>
-          <input type="date" class="wizard-date-input" id="dateInput" min="${todayLocalISO()}" />
-          <button type="button" class="wizard-skip-link" id="skipDate">Ainda não tenho data definida</button>
-        `;
-        const dateInput = document.getElementById('dateInput');
-        dateInput.addEventListener('change', ()=>{
-          if(dateInput.value){
-            const [y,m,d] = dateInput.value.split('-');
-            state.date = `${d}/${m}/${y}`;
-            advance(300);
+        const todayISO = todayLocalISO();
+        const [tY, tM] = todayISO.split('-').map(Number);
+        let viewYear = tY, viewMonth = tM; // viewMonth é 1-indexado
+
+        function pad(n){ return String(n).padStart(2, '0'); }
+        function daysInMonth(y, m){ return new Date(y, m, 0).getDate(); }
+        function firstWeekday(y, m){ return new Date(y, m - 1, 1).getDay(); }
+
+        function paint(){
+          const total = daysInMonth(viewYear, viewMonth);
+          const startWeekday = firstWeekday(viewYear, viewMonth);
+          const canGoPrev = !(viewYear === tY && viewMonth === tM);
+          let cells = '';
+          for(let i = 0; i < startWeekday; i++){ cells += `<span class="wcal-cell empty"></span>`; }
+          for(let day = 1; day <= total; day++){
+            const iso = `${viewYear}-${pad(viewMonth)}-${pad(day)}`;
+            if(iso < todayISO){
+              cells += `<span class="wcal-cell disabled">${day}</span>`;
+            } else {
+              const isSelected = state.date && state.dateISO === iso;
+              cells += `<button type="button" class="wcal-cell${isSelected ? ' selected' : ''}" data-date="${iso}">${day}</button>`;
+            }
           }
-        });
-        document.getElementById('skipDate').addEventListener('click', ()=>{
-          state.date = "A definir";
-          advance(150);
-        });
+          content.innerHTML = `
+            <div class="wizard-question">Já tem uma data em mente?</div>
+            <div class="wcal">
+              <div class="wcal-head">
+                <button type="button" class="wcal-nav" id="wcalPrev" ${canGoPrev ? '' : 'disabled'}>‹</button>
+                <span class="wcal-title">${WCAL_MONTHS[viewMonth - 1]} ${viewYear}</span>
+                <button type="button" class="wcal-nav" id="wcalNext">›</button>
+              </div>
+              <div class="wcal-weekdays">${WCAL_WEEKDAYS.map(w => `<span>${w}</span>`).join('')}</div>
+              <div class="wcal-grid">${cells}</div>
+            </div>
+            <button type="button" class="wizard-skip-link" id="skipDate">Ainda não tenho data definida</button>
+          `;
+          const prevBtn = document.getElementById('wcalPrev');
+          if(prevBtn){
+            prevBtn.addEventListener('click', ()=>{
+              viewMonth--;
+              if(viewMonth < 1){ viewMonth = 12; viewYear--; }
+              paint();
+            });
+          }
+          document.getElementById('wcalNext').addEventListener('click', ()=>{
+            viewMonth++;
+            if(viewMonth > 12){ viewMonth = 1; viewYear++; }
+            paint();
+          });
+          content.querySelectorAll('.wcal-cell[data-date]').forEach(btn=>{
+            btn.addEventListener('click', ()=>{
+              const [y, m, d] = btn.dataset.date.split('-');
+              state.date = `${d}/${m}/${y}`;
+              state.dateISO = btn.dataset.date;
+              content.querySelectorAll('.wcal-cell[data-date]').forEach(b => b.classList.remove('selected'));
+              btn.classList.add('selected');
+              advance(400);
+            });
+          });
+          document.getElementById('skipDate').addEventListener('click', ()=>{
+            state.date = "A definir";
+            advance(150);
+          });
+        }
+
+        paint();
       }
 
       function renderStep7(){
